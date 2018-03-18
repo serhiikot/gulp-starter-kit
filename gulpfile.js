@@ -3,6 +3,10 @@
 // В переменные получаем установленные пакеты
 const gulp = require('gulp');
 const sass = require('gulp-sass');
+const babel = require('gulp-babel');
+const concat = require('gulp-concat');
+const uglify = require('gulp-uglify');
+const pump = require('pump');
 const postcss = require('gulp-postcss');
 const autoprefixer = require('autoprefixer');
 const cssnano = require('gulp-cssnano');
@@ -69,6 +73,20 @@ gulp.task('css', () =>
     .pipe(server.stream()),
 );
 
+gulp.task('js', () =>
+  gulp
+    .src('./src/js/**.js')
+    .pipe(babel({
+      presets: ['@babel/env']
+    }))
+    .pipe(concat('script.js'))
+    .pipe(uglify()
+          .pipe(gulp.dest('./build/appjs')))
+    .pipe(gulp.dest('./build/js'))
+);
+
+
+
 // Создаем svg спрайт
 gulp.task('svg-sprite', () =>
   gulp
@@ -112,6 +130,7 @@ gulp.task('watch', () => {
   gulp.watch('./src/*.html', ['html']);
   // Следим за изменениями в любом sass файле и вызываем таск 'css' на каждом изменении
   gulp.watch('./src/sass/**/*.scss', ['css']);
+  gulp.watch('./src/js/*.js', ['js']);
 });
 
 // Таск создания и запуска веб-сервера
@@ -143,7 +162,7 @@ gulp.task('prepare', () => del(['**/.gitkeep', 'README.md', 'banner.png']));
 // Таск который 1 раз собирает все статические файлы
 // Запускается из корня проекта командой npm run build
 gulp.task('build', cb => {
-  sequence('del:build', 'svg-sprite', 'images', 'fonts', 'css', 'html', cb);
+  sequence('del:build', 'svg-sprite', 'images', 'fonts','js', 'css', 'html', cb);
 });
 
 // Главный таск для разработки, сначала удаляет папку build,
